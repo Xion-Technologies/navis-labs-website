@@ -26,7 +26,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { pathname } = useLocation();
 
   useEffect(() => {
