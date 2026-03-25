@@ -8,6 +8,8 @@ import PageTransition from "@/components/PageTransition";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Services from "@/pages/Services";
+import InnovationLab from "@/pages/InnovationLab";
+import CustomDevelopment from "@/pages/CustomDevelopment";
 import HowItWorks from "@/pages/HowItWorks";
 import Solutions from "@/pages/Solutions";
 import Projects from "@/pages/Projects";
@@ -40,6 +42,8 @@ function Layout() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/services/innovation-lab" element={<InnovationLab />} />
+            <Route path="/services/custom-development" element={<CustomDevelopment />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/solutions" element={<Solutions />} />
             <Route path="/projects" element={<Projects />} />

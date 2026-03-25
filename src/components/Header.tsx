@@ -1,11 +1,22 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const navItems = [
+type NavItem =
+  | { label: string; href: string; children?: undefined }
+  | { label: string; href: string; children: { label: string; href: string; desc: string }[] };
+
+const navItems: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  { label: "Services", href: "/services" },
-  { label: "How It Works", href: "/how-it-works" },
+  {
+    label: "Services",
+    href: "/services",
+    children: [
+      { label: "Innovation Lab", href: "/services/innovation-lab", desc: "AI tools you can actually use in your business" },
+      { label: "Custom Development", href: "/services/custom-development", desc: "Bespoke software, built with you in mind" },
+    ],
+  },
+  { label: "How We Work", href: "/how-it-works" },
   { label: "Solutions", href: "/solutions" },
   { label: "Projects", href: "/projects" },
   { label: "Contact", href: "/contact" },
@@ -14,6 +25,8 @@ const navItems = [
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownTimeout = useRef<ReturnType<typeof setTimeout>>();
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -65,12 +78,16 @@ export default function Header() {
           to="/"
           className="relative z-50 flex items-center gap-2 text-xl font-extrabold tracking-tight text-white"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal/10 text-sm font-bold text-teal">
-            N
-          </span>
-          <span>
-            Navis <span className="text-teal">Labs</span>
-          </span>
+          <img
+            src="/logos/NL_logo_white.png"
+            alt=""
+            className="h-8 w-auto"
+          />
+          <img
+            src="/logos/NAVIS_LABS_logo_white.png"
+            alt="Navis Labs"
+            className="hidden h-5 w-auto sm:block"
+          />
         </Link>
 
         {/* Desktop nav — centered pill container */}
@@ -83,7 +100,78 @@ export default function Header() {
             }`}
           >
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || (item.children && pathname.startsWith(item.href + "/"));
+              const hasChildren = !!item.children;
+
+              if (hasChildren) {
+                return (
+                  <div
+                    key={item.href}
+                    className="relative"
+                    onMouseEnter={() => {
+                      clearTimeout(dropdownTimeout.current);
+                      setDropdownOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      dropdownTimeout.current = setTimeout(() => setDropdownOpen(false), 200);
+                    }}
+                  >
+                    <Link
+                      to={item.href}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`relative flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[12px] font-medium transition-all duration-200 xl:px-3.5 xl:text-[13px] ${
+                        isActive
+                          ? "bg-white/[0.08] text-teal"
+                          : "text-neutral-light/70 hover:text-white hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      {item.label}
+                      <svg
+                        className={`h-3 w-3 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </Link>
+
+                    {/* Dropdown */}
+                    <div
+                      className={`absolute left-1/2 top-full -translate-x-1/2 pt-3 transition-all duration-200 ${
+                        dropdownOpen
+                          ? "visible opacity-100 translate-y-0"
+                          : "invisible opacity-0 -translate-y-2"
+                      }`}
+                    >
+                      <div className="w-64 rounded-xl border border-white/[0.06] bg-navy/95 p-2 shadow-xl shadow-black/20 backdrop-blur-xl">
+                        {item.children!.map((child) => {
+                          const childActive = pathname === child.href;
+                          return (
+                            <Link
+                              key={child.href}
+                              to={child.href}
+                              onClick={() => setDropdownOpen(false)}
+                              className={`group flex flex-col gap-0.5 rounded-lg px-3 py-2.5 transition-all duration-150 ${
+                                childActive
+                                  ? "bg-teal/10 text-teal"
+                                  : "text-neutral-light/80 hover:bg-white/[0.05] hover:text-white"
+                              }`}
+                            >
+                              <span className="text-[13px] font-semibold">{child.label}</span>
+                              <span className="text-[11px] text-neutral-dark/70 group-hover:text-neutral-dark">
+                                {child.desc}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -160,38 +248,67 @@ export default function Header() {
             {/* Nav links */}
             <div className="space-y-1">
               {navItems.map((item, i) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || (item.children && pathname.startsWith(item.href + "/"));
                 return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`group flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-500 ${
-                      mobileOpen
-                        ? "opacity-100 translate-x-0"
-                        : "opacity-0 -translate-x-8"
-                    } ${
-                      isActive
-                        ? "bg-white/[0.06]"
-                        : "hover:bg-white/[0.03]"
-                    }`}
-                    style={{
-                      transitionDelay: mobileOpen ? `${100 + i * 50}ms` : "0ms",
-                    }}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                        isActive ? "bg-teal" : "bg-white/20 group-hover:bg-teal/50"
+                  <div key={item.href}>
+                    <Link
+                      to={item.href}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`group flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-500 ${
+                        mobileOpen
+                          ? "opacity-100 translate-x-0"
+                          : "opacity-0 -translate-x-8"
+                      } ${
+                        isActive
+                          ? "bg-white/[0.06]"
+                          : "hover:bg-white/[0.03]"
                       }`}
-                    />
-                    <span
-                      className={`text-2xl font-semibold transition-colors ${
-                        isActive ? "text-teal" : "text-white group-hover:text-teal"
-                      }`}
+                      style={{
+                        transitionDelay: mobileOpen ? `${100 + i * 50}ms` : "0ms",
+                      }}
                     >
-                      {item.label}
-                    </span>
-                  </Link>
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                          isActive ? "bg-teal" : "bg-white/20 group-hover:bg-teal/50"
+                        }`}
+                      />
+                      <span
+                        className={`text-2xl font-semibold transition-colors ${
+                          isActive ? "text-teal" : "text-white group-hover:text-teal"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    </Link>
+                    {/* Sub-items for Services */}
+                    {item.children && (
+                      <div className="ml-10 mt-1 space-y-1">
+                        {item.children.map((child, ci) => {
+                          const childActive = pathname === child.href;
+                          return (
+                            <Link
+                              key={child.href}
+                              to={child.href}
+                              className={`block rounded-lg px-4 py-2 text-base font-medium transition-all duration-500 ${
+                                mobileOpen
+                                  ? "opacity-100 translate-x-0"
+                                  : "opacity-0 -translate-x-8"
+                              } ${
+                                childActive
+                                  ? "text-teal"
+                                  : "text-neutral-dark hover:text-white"
+                              }`}
+                              style={{
+                                transitionDelay: mobileOpen ? `${130 + i * 50 + ci * 40}ms` : "0ms",
+                              }}
+                            >
+                              {child.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>

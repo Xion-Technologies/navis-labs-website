@@ -5,12 +5,12 @@ export default function HowItWorksPage() {
   return (
     <>
       <Helmet>
-        <title>How It Works | Navis Labs</title>
+        <title>How We Work | Navis Labs</title>
         <meta
           name="description"
           content="Our proven methodology transforms your vision into a working solution within days. From discovery meeting to ongoing support."
         />
-        <meta property="og:title" content="How It Works | Navis Labs" />
+        <meta property="og:title" content="How We Work | Navis Labs" />
         <meta
           property="og:description"
           content="Our proven methodology transforms your vision into a working solution within days. From discovery meeting to ongoing support."

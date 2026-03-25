@@ -3,16 +3,12 @@ import { Link } from "react-router-dom";
 const footerLinks = {
   Company: [
     { label: "About", href: "/about" },
-    { label: "How It Works", href: "/how-it-works" },
+    { label: "How We Work", href: "/how-it-works" },
     { label: "Projects", href: "/projects" },
   ],
   Services: [
-    { label: "Innovation Lab", href: "/services#innovation-lab" },
-    { label: "Custom Development", href: "/services#custom-development" },
-    { label: "AI Integration", href: "/services#ai-integration" },
-    { label: "Product Design", href: "/services#product-design" },
-    { label: "System Integration", href: "/services#system-integration" },
-    { label: "Cloud Architecture", href: "/services#cloud-architecture" },
+    { label: "Innovation Lab", href: "/services/innovation-lab" },
+    { label: "Custom Development", href: "/services/custom-development" },
   ],
   Solutions: [
     { label: "ERP", href: "/solutions#erp" },
@@ -34,8 +30,9 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16">
         {/* Top section */}
         <div className="mb-12">
-          <Link to="/" className="text-xl font-extrabold tracking-tight text-white">
-            Navis <span className="text-teal">Labs</span>
+          <Link to="/" className="inline-flex items-center gap-2">
+            <img src="/logos/NL_logo_white.png" alt="" className="h-8 w-auto" />
+            <img src="/logos/NAVIS_LABS_logo_white.png" alt="Navis Labs" className="h-5 w-auto" />
           </Link>
           <p className="mt-3 max-w-md text-sm text-neutral-dark">
             Navigating businesses to the future of technology.

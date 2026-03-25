@@ -146,7 +146,7 @@ export default function ContactContent() {
                         Email
                       </p>
                       <p className="mt-1 text-sm text-neutral-light">
-                        hello@navislabs.com
+                        ops@navislabs.ai
                       </p>
                     </div>
                   </div>

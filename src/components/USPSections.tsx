@@ -190,38 +190,56 @@ function StepFlow({ steps }: { steps: string[] }) {
 
 /* ── Main Section ── */
 export default function USPSections() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = cardRefs.current.indexOf(entry.target as HTMLDivElement);
-            if (idx !== -1) setActiveIndex(idx);
+    const viewportCenter = () => window.innerHeight / 2;
+
+    const handleScroll = () => {
+      const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+      if (cards.length === 0) return;
+
+      const center = viewportCenter();
+      let closest = -1;
+      let closestDist = Infinity;
+
+      cards.forEach((card, i) => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(cardCenter - center);
+
+        // Only consider cards that are at least partially in the viewport
+        if (rect.bottom > 0 && rect.top < window.innerHeight) {
+          if (dist < closestDist) {
+            closestDist = dist;
+            closest = i;
           }
-        });
-      },
-      {
-        rootMargin: "-35% 0px -35% 0px",
-        threshold: 0.1,
+        }
+      });
+
+      // Only activate if the closest card's center is within 45% of viewport center
+      if (closest !== -1 && closestDist < window.innerHeight * 0.45) {
+        setActiveIndex(closest);
       }
-    );
+    };
 
-    cardRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => observer.disconnect();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Initial check after mount
+    const t = setTimeout(handleScroll, 100);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(t);
+    };
   }, []);
 
   return (
-    <section className="relative py-20 sm:py-32">
+    <section ref={sectionRef} className="relative py-20 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         {/* Mobile: stacked layout */}
         <div className="lg:hidden space-y-16">
-          {usps.map((usp, i) => (
+          {usps.map((usp) => (
             <div key={usp.overline}>
               <span className="text-xs font-bold uppercase tracking-[0.2em] text-teal">
                 {usp.overline}
@@ -239,58 +257,64 @@ export default function USPSections() {
 
         {/* Desktop: sticky orbital + scrolling cards */}
         <div className="hidden lg:flex lg:gap-16 xl:gap-24">
-          {/* Left — sticky orbital visual */}
+          {/* Left — sticky orbital visual, vertically centered in viewport */}
           <div className="w-[420px] shrink-0 xl:w-[460px]">
-            <div className="sticky top-32 flex items-center justify-center">
-              <OrbitalVisual activeIndex={activeIndex} />
+            <div className="sticky top-0 flex h-screen items-center justify-center">
+              <OrbitalVisual activeIndex={Math.max(0, activeIndex)} />
 
               {/* Active indicator label */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
+              <div className="absolute bottom-[calc(50%-220px)] left-1/2 -translate-x-1/2 xl:bottom-[calc(50%-250px)]">
                 <span className="rounded-full border border-teal/20 bg-teal/[0.06] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-teal transition-all duration-500">
-                  {usps[activeIndex].overline}
+                  {usps[Math.max(0, activeIndex)].overline}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Right — scrolling content cards */}
-          <div className="flex-1 space-y-8">
-            {usps.map((usp, i) => (
-              <div
-                key={usp.overline}
-                ref={(el) => { cardRefs.current[i] = el; }}
-                className={`rounded-2xl border p-8 transition-all duration-500 xl:p-10 ${
-                  i === activeIndex
-                    ? "border-teal/20 bg-white/[0.03] shadow-[0_0_40px_rgba(0,212,170,0.06)]"
-                    : "border-transparent bg-transparent opacity-40"
-                }`}
-              >
-                <span
-                  className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-500 ${
-                    i === activeIndex ? "text-teal" : "text-neutral-dark/60"
+          <div className="flex-1">
+            {/* Top spacer so first card starts below viewport center */}
+            <div className="h-[45vh]" aria-hidden="true" />
+
+            <div className="space-y-10">
+              {usps.map((usp, i) => (
+                <div
+                  key={usp.overline}
+                  ref={(el) => { cardRefs.current[i] = el; }}
+                  className={`rounded-2xl border p-8 transition-all duration-500 xl:p-10 ${
+                    i === activeIndex
+                      ? "border-teal/20 bg-white/[0.03] shadow-[0_0_40px_rgba(0,212,170,0.06)]"
+                      : "border-transparent bg-transparent opacity-40"
                   }`}
                 >
-                  {usp.overline}
-                </span>
-                <h2
-                  className={`mt-3 text-2xl font-extrabold leading-tight tracking-tight transition-colors duration-500 xl:text-3xl ${
-                    i === activeIndex ? "text-white" : "text-white/50"
-                  }`}
-                >
-                  {usp.headline}
-                </h2>
-                <p
-                  className={`mt-4 text-base leading-relaxed transition-colors duration-500 ${
-                    i === activeIndex ? "text-neutral-dark" : "text-neutral-dark/40"
-                  }`}
-                >
-                  {usp.body}
-                </p>
-                {usp.steps && i === activeIndex && <StepFlow steps={usp.steps} />}
-              </div>
-            ))}
+                  <span
+                    className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-500 ${
+                      i === activeIndex ? "text-teal" : "text-neutral-dark/60"
+                    }`}
+                  >
+                    {usp.overline}
+                  </span>
+                  <h2
+                    className={`mt-3 text-2xl font-extrabold leading-tight tracking-tight transition-colors duration-500 xl:text-3xl ${
+                      i === activeIndex ? "text-white" : "text-white/50"
+                    }`}
+                  >
+                    {usp.headline}
+                  </h2>
+                  <p
+                    className={`mt-4 text-base leading-relaxed transition-colors duration-500 ${
+                      i === activeIndex ? "text-neutral-dark" : "text-neutral-dark/40"
+                    }`}
+                  >
+                    {usp.body}
+                  </p>
+                  {usp.steps && i === activeIndex && <StepFlow steps={usp.steps} />}
+                </div>
+              ))}
+            </div>
+
             {/* Bottom spacer so last card can scroll to center */}
-            <div className="h-[40vh]" aria-hidden="true" />
+            <div className="h-[20vh]" aria-hidden="true" />
           </div>
         </div>
       </div>

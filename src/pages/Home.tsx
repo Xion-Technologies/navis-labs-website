@@ -1,9 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/HeroSection";
 import USPSections from "@/components/USPSections";
+import PreHero from "@/components/PreHero";
 
-const USPSummaryStrip = lazy(() => import("@/components/USPSummaryStrip"));
 const HowItWorksPreview = lazy(() => import("@/components/HowItWorksPreview"));
 const ServicesPreview = lazy(() => import("@/components/ServicesPreview"));
 const FeaturedProjects = lazy(() => import("@/components/FeaturedProjects"));
@@ -21,7 +21,7 @@ const organizationSchema = {
   foundingDate: "2024",
   contactPoint: {
     "@type": "ContactPoint",
-    email: "hello@navislabs.com",
+    email: "ops@navislabs.ai",
     contactType: "sales",
     availableLanguage: "English",
   },
@@ -41,8 +41,12 @@ const organizationSchema = {
 };
 
 export default function Home() {
+  const [splashDone, setSplashDone] = useState(false);
+  const handleSplashComplete = useCallback(() => setSplashDone(true), []);
+
   return (
     <>
+      {!splashDone && <PreHero onComplete={handleSplashComplete} />}
       <Helmet>
         <title>Navis Labs | We Navigate the Tech. You Navigate the Business.</title>
         <meta
@@ -63,7 +67,6 @@ export default function Home() {
       <HeroSection />
       <USPSections />
       <Suspense fallback={null}>
-        <USPSummaryStrip />
         <HowItWorksPreview />
         <ServicesPreview />
         <FeaturedProjects />

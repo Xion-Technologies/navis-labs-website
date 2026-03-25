@@ -136,7 +136,7 @@ export default function ServicesPreview() {
 
                   {/* See Use Cases button — liquid glass */}
                   <Link
-                    to={`/services#${service.id}`}
+                    to={`/services/${service.id}`}
                     className={`group relative mt-5 inline-flex items-center gap-2 overflow-hidden rounded-full px-6 py-2.5 text-sm font-semibold backdrop-blur-md transition-all duration-300 ${
                       isAlt
                         ? "border border-indigo/20 bg-indigo/[0.08] text-indigo shadow-[0_0_20px_rgba(99,102,241,0.06)] hover:border-indigo/35 hover:bg-indigo/[0.14] hover:shadow-[0_0_28px_rgba(99,102,241,0.12)]"
