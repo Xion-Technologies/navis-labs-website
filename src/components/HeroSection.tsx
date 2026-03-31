@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import ParticleField from "@/components/ParticleField";
+import ConcaveGrid from "@/components/ConcaveGrid";
 
 const logos = [
   { src: "/logos/anthropic.png", alt: "Anthropic", width: 130 },
@@ -14,26 +17,48 @@ const logos = [
   { src: "/logos/openai.png", alt: "OpenAI", width: 120 },
 ];
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  /** When true, elements cascade in with staggered animations */
+  animate?: boolean;
+}
+
+export default function HeroSection({ animate = false }: HeroSectionProps) {
+  // Phase 0: everything hidden. Phase 1: title visible. Phase 2: everything visible.
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    if (!animate) return;
+
+    // Small delay so the component renders at phase 0 first, then transitions
+    const t1 = setTimeout(() => setPhase(1), 50);
+    // After 1.5s of title showing, reveal the rest
+    const t2 = setTimeout(() => setPhase(2), 1500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [animate]);
+
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
+      {/* Concave perspective grid — gyroscopic tilt */}
+      <ConcaveGrid />
+
+      {/* Interactive particle field — hero only */}
+      <ParticleField />
+
       {/* Animated background orbs */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden="true"
+        style={{
+          opacity: phase >= 1 ? 1 : 0,
+          transition: "opacity 1.5s ease",
+        }}
+      >
         {/* Primary teal orb */}
         <div className="absolute top-1/4 left-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal/[0.07] blur-[120px] animate-[float_8s_ease-in-out_infinite]" />
         {/* Secondary indigo orb */}
         <div className="absolute bottom-1/4 right-1/4 h-[500px] w-[500px] rounded-full bg-indigo/[0.08] blur-[100px] animate-[float_10s_ease-in-out_infinite_reverse]" />
         {/* Small accent orb */}
         <div className="absolute top-1/3 left-1/4 h-[300px] w-[300px] rounded-full bg-teal/[0.04] blur-[80px] animate-[float_12s_ease-in-out_infinite_2s]" />
-
-        {/* Grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "64px 64px",
-          }}
-        />
 
         {/* Radial fade at edges */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,var(--color-navy)_75%)]" />
@@ -46,8 +71,15 @@ export default function HeroSection() {
 
         {/* Main content group */}
         <div>
-          {/* Headline */}
-          <h1 className="text-4xl leading-[1.1] font-extrabold tracking-tight text-white sm:text-5xl lg:text-[3.5rem] xl:text-[4rem]">
+          {/* Headline — fades in first */}
+          <h1
+            className="text-4xl leading-[1.1] font-extrabold tracking-tight text-white sm:text-5xl lg:text-[3.5rem] xl:text-[4rem]"
+            style={{
+              opacity: phase >= 1 ? 1 : 0,
+              transform: phase >= 1 ? "translateY(0)" : "translateY(16px)",
+              transition: "opacity 1.2s ease, transform 1.2s ease",
+            }}
+          >
             We Navigate the{" "}
             <span className="bg-gradient-to-r from-teal via-teal to-indigo bg-clip-text text-transparent">
               Tech.
@@ -56,14 +88,28 @@ export default function HeroSection() {
             You Navigate the Business.
           </h1>
 
-          {/* Subheadline */}
-          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-neutral-dark sm:text-lg">
+          {/* Subheadline — fades in with rest */}
+          <p
+            className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-neutral-dark sm:text-lg"
+            style={{
+              opacity: phase >= 2 ? 1 : 0,
+              transform: phase >= 2 ? "translateY(0)" : "translateY(12px)",
+              transition: "opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s",
+            }}
+          >
             We handle the complexity of modern technology — so you can focus on
             building your company and serving your customers.
           </p>
 
-          {/* CTA buttons */}
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          {/* CTA buttons — fades in with rest */}
+          <div
+            className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+            style={{
+              opacity: phase >= 2 ? 1 : 0,
+              transform: phase >= 2 ? "translateY(0)" : "translateY(12px)",
+              transition: "opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s",
+            }}
+          >
             <Link
               to="/contact"
               className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-teal px-8 py-3.5 text-base font-semibold text-navy transition-all duration-300 hover:shadow-xl hover:shadow-teal/25 active:scale-[0.98]"
@@ -94,7 +140,14 @@ export default function HeroSection() {
         <div className="flex-1" />
 
         {/* Trust signal — infinite logo carousel */}
-        <div className="flex w-full flex-col items-center gap-4 pb-4">
+        <div
+          className="flex w-full flex-col items-center gap-4 pb-4"
+          style={{
+            opacity: phase >= 2 ? 1 : 0,
+            transform: phase >= 2 ? "translateY(0)" : "translateY(16px)",
+            transition: "opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s",
+          }}
+        >
           <p className="text-xs font-medium uppercase tracking-widest text-neutral-dark/60">
             Our Partners
           </p>

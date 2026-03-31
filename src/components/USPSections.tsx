@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 const usps = [
   {
@@ -34,117 +34,266 @@ const usps = [
   },
 ];
 
-/* ── Orbital rings SVG (sticky left visual) ── */
-function OrbitalVisual({ activeIndex }: { activeIndex: number }) {
-  // Each USP maps to a node position on the rings
-  const nodes = [
-    { cx: 200, cy: 60, ring: 1 },   // AI NAVIGATORS — top of outer ring
-    { cx: 330, cy: 150, ring: 2 },   // FAST — right of mid ring
-    { cx: 280, cy: 280, ring: 3 },   // EFFICIENT — bottom-right
-    { cx: 100, cy: 260, ring: 2 },   // TRULY YOURS — bottom-left
-    { cx: 70, cy: 130, ring: 1 },    // HERE FOR YOU — left of outer ring
-  ];
+/* Sonar detection points — positioned around the radar */
+const sonarPoints = [
+  { angle: -70, dist: 0.78 },  // AI NAVIGATORS — upper area
+  { angle: 15, dist: 0.55 },   // FAST — right-mid
+  { angle: 55, dist: 0.85 },   // EFFICIENT — lower-right
+  { angle: 140, dist: 0.62 },  // TRULY YOURS — lower-left
+  { angle: 210, dist: 0.75 },  // HERE FOR YOU — upper-left
+];
+
+/* ── Sonar Canvas Visualization ── */
+function SonarVisual({ activeIndex }: { activeIndex: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number>(0);
+
+  const state = useRef({
+    sweepAngle: 0, // current radar sweep angle in radians
+    // Per-point state
+    points: sonarPoints.map(() => ({
+      blinkPhase: 0,
+      detected: false,
+      detectedAt: 0, // timestamp of detection
+      fadeAlpha: 0,   // smooth fade in
+    })),
+    prevActive: -1,
+    time: 0,
+  });
+
+  // Track active index changes
+  const activeRef = useRef(activeIndex);
+  activeRef.current = activeIndex;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
+    const size = 420;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const maxR = size / 2 - 15;
+
+    // Ring radii (concentric circles)
+    const rings = [0.25, 0.5, 0.75, 1.0];
+
+    function draw() {
+      if (!ctx || !canvas) return;
+      const s = state.current;
+      const active = activeRef.current;
+
+      s.time += 1;
+
+      // Sweep rotation — smooth and slow
+      s.sweepAngle += 0.008;
+      if (s.sweepAngle > Math.PI * 2) s.sweepAngle -= Math.PI * 2;
+
+      // Detect new point when active changes
+      if (active !== s.prevActive && active >= 0) {
+        s.points[active].detected = true;
+        s.points[active].detectedAt = s.time;
+        s.points[active].blinkPhase = 0;
+        s.prevActive = active;
+      }
+
+      // Update point states
+      for (let i = 0; i < s.points.length; i++) {
+        const p = s.points[i];
+        if (p.detected) {
+          p.blinkPhase += 0.017; // ~60bpm resting heartbeat pace
+        }
+        // Fade alpha — active point is bright, detected (past) points dimmer
+        const targetAlpha = i === active ? 1 : p.detected ? 0.35 : 0;
+        p.fadeAlpha += (targetAlpha - p.fadeAlpha) * 0.03;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      // === Background glow ===
+      const bgGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+      bgGlow.addColorStop(0, "rgba(0, 212, 170, 0.03)");
+      bgGlow.addColorStop(0.5, "rgba(0, 212, 170, 0.01)");
+      bgGlow.addColorStop(1, "rgba(0, 212, 170, 0)");
+      ctx.fillStyle = bgGlow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === Concentric rings ===
+      for (const ringRatio of rings) {
+        const r = maxR * ringRatio;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 212, 170, ${ringRatio === 1 ? 0.06 : ringRatio === 0.75 ? 0.07 : 0.08})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+
+      // === Cross-hair axes ===
+      ctx.strokeStyle = "rgba(0, 212, 170, 0.06)";
+      ctx.lineWidth = 0.5;
+      // Horizontal
+      ctx.beginPath();
+      ctx.moveTo(cx - maxR, cy);
+      ctx.lineTo(cx + maxR, cy);
+      ctx.stroke();
+      // Vertical
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - maxR);
+      ctx.lineTo(cx, cy + maxR);
+      ctx.stroke();
+
+      // === Sweep line with trailing fade ===
+      const sweepLen = maxR;
+
+      // Trailing glow (cone behind sweep)
+      const trailSpan = 0.6; // radians of trail
+      const trailSteps = 30;
+      for (let i = 0; i < trailSteps; i++) {
+        const t = i / trailSteps;
+        const angle = s.sweepAngle - t * trailSpan;
+        const alpha = 0.06 * (1 - t);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(
+          cx + Math.cos(angle) * sweepLen,
+          cy + Math.sin(angle) * sweepLen
+        );
+        ctx.strokeStyle = `rgba(0, 212, 170, ${alpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Main sweep line
+      const sweepEndX = cx + Math.cos(s.sweepAngle) * sweepLen;
+      const sweepEndY = cy + Math.sin(s.sweepAngle) * sweepLen;
+      const sweepGrad = ctx.createLinearGradient(cx, cy, sweepEndX, sweepEndY);
+      sweepGrad.addColorStop(0, "rgba(0, 212, 170, 0.5)");
+      sweepGrad.addColorStop(1, "rgba(0, 212, 170, 0.05)");
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(sweepEndX, sweepEndY);
+      ctx.strokeStyle = sweepGrad;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // === Center dot ===
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0, 212, 170, 0.8)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0, 212, 170, 0.15)";
+      ctx.fill();
+
+      // === Detection points ===
+      for (let i = 0; i < sonarPoints.length; i++) {
+        const sp = sonarPoints[i];
+        const p = s.points[i];
+        if (p.fadeAlpha < 0.01) continue;
+
+        const rad = (sp.angle * Math.PI) / 180;
+        const px = cx + Math.cos(rad) * sp.dist * maxR;
+        const py = cy + Math.sin(rad) * sp.dist * maxR;
+
+        const isActive = i === active;
+        const alpha = p.fadeAlpha;
+
+        // Ping ripple on active point — slow heartbeat pace
+        if (isActive) {
+          const rippleCount = 2;
+          for (let r = 0; r < rippleCount; r++) {
+            const ripplePhase = (p.blinkPhase + r * 1.6) % 3.2;
+            const rippleR = 5 + ripplePhase * 10;
+            const rippleAlpha = Math.max(0, 0.2 * (1 - ripplePhase / 3.2));
+            ctx.beginPath();
+            ctx.arc(px, py, rippleR, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(0, 212, 170, ${rippleAlpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+
+        // Outer glow
+        const glowGrad = ctx.createRadialGradient(px, py, 0, px, py, isActive ? 16 : 10);
+        glowGrad.addColorStop(0, `rgba(0, 212, 170, ${0.2 * alpha})`);
+        glowGrad.addColorStop(1, "rgba(0, 212, 170, 0)");
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, isActive ? 16 : 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Blink effect on active — slow heartbeat pulse
+        const blinkAlpha = isActive
+          ? 0.65 + Math.sin(p.blinkPhase * 1.2) * 0.35
+          : alpha * 0.6;
+
+        // Core dot
+        ctx.beginPath();
+        ctx.arc(px, py, isActive ? 4 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 212, 170, ${blinkAlpha})`;
+        ctx.fill();
+      }
+
+      // === Soft inner vignette to blend into glass edges ===
+      const vignette = ctx.createRadialGradient(cx, cy, maxR * 0.55, cx, cy, maxR * 1.02);
+      vignette.addColorStop(0, "rgba(10, 22, 40, 0)");
+      vignette.addColorStop(0.7, "rgba(10, 22, 40, 0)");
+      vignette.addColorStop(0.88, "rgba(10, 22, 40, 0.5)");
+      vignette.addColorStop(1, "rgba(10, 22, 40, 0.85)");
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.restore();
+      rafRef.current = requestAnimationFrame(draw);
+    }
+
+    rafRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Glow behind orbital */}
-      <div className="absolute h-80 w-80 rounded-full bg-teal/[0.08] blur-[100px]" />
-      <div className="absolute h-48 w-48 rounded-full bg-indigo/[0.06] blur-[80px]" />
+      {/* Glow behind glass container */}
+      <div className="absolute h-96 w-96 rounded-full bg-teal/[0.05] blur-[120px]" />
 
-      <svg
-        viewBox="0 0 400 400"
-        fill="none"
-        className="relative h-[360px] w-[360px] xl:h-[420px] xl:w-[420px]"
-        aria-hidden="true"
+      {/* Liquid glass container */}
+      <div
+        className="relative overflow-hidden rounded-[2rem] xl:rounded-[2.5rem]"
+        style={{
+          background: "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.03) 100%)",
+          border: "1px solid rgba(255,255,255,0.06)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
       >
-        {/* Outer ring */}
-        <circle
-          cx="200" cy="200" r="170"
-          stroke="url(#ring-grad)"
-          strokeWidth="1"
-          opacity={activeIndex === 0 || activeIndex === 4 ? 0.5 : 0.15}
-          className="transition-opacity duration-700"
-        />
-        {/* Middle ring */}
-        <circle
-          cx="200" cy="200" r="120"
-          stroke="url(#ring-grad)"
-          strokeWidth="1"
-          opacity={activeIndex === 1 || activeIndex === 3 ? 0.5 : 0.15}
-          className="transition-opacity duration-700"
-        />
-        {/* Inner ring */}
-        <circle
-          cx="200" cy="200" r="70"
-          stroke="url(#ring-grad)"
-          strokeWidth="1"
-          opacity={activeIndex === 2 ? 0.5 : 0.15}
-          className="transition-opacity duration-700"
+        {/* Inner highlight edge — top shine */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-px"
+          style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 70%, transparent)" }}
         />
 
-        {/* Center core */}
-        <circle cx="200" cy="200" r="6" fill="#00D4AA" opacity="0.6" />
-        <circle cx="200" cy="200" r="3" fill="#00D4AA" opacity="0.9" />
-
-        {/* Orbital connecting lines from center to active node */}
-        <line
-          x1="200" y1="200"
-          x2={nodes[activeIndex].cx}
-          y2={nodes[activeIndex].cy}
-          stroke="url(#line-grad)"
-          strokeWidth="1"
-          strokeDasharray="4 4"
-          opacity="0.4"
-          className="transition-all duration-700"
+        <canvas
+          ref={canvasRef}
+          className="relative h-[360px] w-[360px] xl:h-[420px] xl:w-[420px]"
+          aria-hidden="true"
         />
-
-        {/* Node dots */}
-        {nodes.map((node, i) => (
-          <g key={i}>
-            {/* Pulse ring on active */}
-            {i === activeIndex && (
-              <circle
-                cx={node.cx} cy={node.cy} r="16"
-                stroke="#00D4AA"
-                strokeWidth="1"
-                fill="none"
-                opacity="0.3"
-                className="animate-[ping_2s_ease-in-out_infinite]"
-              />
-            )}
-            {/* Outer glow */}
-            <circle
-              cx={node.cx} cy={node.cy}
-              r={i === activeIndex ? 10 : 5}
-              fill={i === activeIndex ? "#00D4AA" : "transparent"}
-              stroke={i === activeIndex ? "#00D4AA" : "#94A3B8"}
-              strokeWidth={i === activeIndex ? 0 : 1}
-              opacity={i === activeIndex ? 0.25 : 0.3}
-              className="transition-all duration-500"
-            />
-            {/* Core dot */}
-            <circle
-              cx={node.cx} cy={node.cy}
-              r={i === activeIndex ? 5 : 3}
-              fill={i === activeIndex ? "#00D4AA" : "#94A3B8"}
-              opacity={i === activeIndex ? 1 : 0.4}
-              className="transition-all duration-500"
-            />
-          </g>
-        ))}
-
-        {/* Gradients */}
-        <defs>
-          <linearGradient id="ring-grad" x1="0" y1="0" x2="400" y2="400">
-            <stop offset="0%" stopColor="#00D4AA" />
-            <stop offset="100%" stopColor="#6366F1" />
-          </linearGradient>
-          <linearGradient id="line-grad" x1="200" y1="200" x2={String(nodes[activeIndex].cx)} y2={String(nodes[activeIndex].cy)}>
-            <stop offset="0%" stopColor="#00D4AA" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#6366F1" stopOpacity="0.2" />
-          </linearGradient>
-        </defs>
-      </svg>
+      </div>
     </div>
   );
 }
@@ -156,7 +305,6 @@ function StepFlow({ steps }: { steps: string[] }) {
       <div className="flex items-center justify-center">
         {steps.map((step, i) => (
           <div key={step} className="flex items-center">
-            {/* Node + label */}
             <div className="flex flex-col items-center gap-1.5">
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${
@@ -171,7 +319,6 @@ function StepFlow({ steps }: { steps: string[] }) {
                 {step}
               </span>
             </div>
-            {/* Connector line */}
             {i < steps.length - 1 && (
               <div
                 className="mx-2 h-px flex-1 min-w-[24px]"
@@ -194,45 +341,40 @@ export default function USPSections() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const viewportCenter = () => window.innerHeight / 2;
+  const handleScroll = useCallback(() => {
+    const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (cards.length === 0) return;
 
-    const handleScroll = () => {
-      const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-      if (cards.length === 0) return;
+    const center = window.innerHeight / 2;
+    let closest = -1;
+    let closestDist = Infinity;
 
-      const center = viewportCenter();
-      let closest = -1;
-      let closestDist = Infinity;
+    cards.forEach((card, i) => {
+      const rect = card.getBoundingClientRect();
+      const cardCenter = rect.top + rect.height / 2;
+      const dist = Math.abs(cardCenter - center);
 
-      cards.forEach((card, i) => {
-        const rect = card.getBoundingClientRect();
-        const cardCenter = rect.top + rect.height / 2;
-        const dist = Math.abs(cardCenter - center);
-
-        // Only consider cards that are at least partially in the viewport
-        if (rect.bottom > 0 && rect.top < window.innerHeight) {
-          if (dist < closestDist) {
-            closestDist = dist;
-            closest = i;
-          }
+      if (rect.bottom > 0 && rect.top < window.innerHeight) {
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = i;
         }
-      });
-
-      // Only activate if the closest card's center is within 45% of viewport center
-      if (closest !== -1 && closestDist < window.innerHeight * 0.45) {
-        setActiveIndex(closest);
       }
-    };
+    });
 
+    if (closest !== -1 && closestDist < window.innerHeight * 0.45) {
+      setActiveIndex(closest);
+    }
+  }, []);
+
+  useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
-    // Initial check after mount
     const t = setTimeout(handleScroll, 100);
     return () => {
       window.removeEventListener("scroll", handleScroll);
       clearTimeout(t);
     };
-  }, []);
+  }, [handleScroll]);
 
   return (
     <section ref={sectionRef} className="relative py-20 sm:py-32">
@@ -255,25 +397,21 @@ export default function USPSections() {
           ))}
         </div>
 
-        {/* Desktop: sticky orbital + scrolling cards */}
+        {/* Desktop: sticky sonar + scrolling cards */}
         <div className="hidden lg:flex lg:gap-16 xl:gap-24">
-          {/* Left — sticky orbital visual, vertically centered in viewport */}
           <div className="w-[420px] shrink-0 xl:w-[460px]">
             <div className="sticky top-0 flex h-screen items-center justify-center">
-              <OrbitalVisual activeIndex={Math.max(0, activeIndex)} />
+              <SonarVisual activeIndex={Math.max(0, activeIndex)} />
 
-              {/* Active indicator label */}
               <div className="absolute bottom-[calc(50%-220px)] left-1/2 -translate-x-1/2 xl:bottom-[calc(50%-250px)]">
-                <span className="rounded-full border border-teal/20 bg-teal/[0.06] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-teal transition-all duration-500">
+                <span className="rounded-full border border-teal/20 bg-teal/[0.06] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-teal transition-all duration-700 ease-out">
                   {usps[Math.max(0, activeIndex)].overline}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right — scrolling content cards */}
           <div className="flex-1">
-            {/* Top spacer so first card starts below viewport center */}
             <div className="h-[45vh]" aria-hidden="true" />
 
             <div className="space-y-10">
@@ -281,28 +419,28 @@ export default function USPSections() {
                 <div
                   key={usp.overline}
                   ref={(el) => { cardRefs.current[i] = el; }}
-                  className={`rounded-2xl border p-8 transition-all duration-500 xl:p-10 ${
+                  className={`rounded-2xl border p-8 transition-all duration-700 ease-out xl:p-10 ${
                     i === activeIndex
                       ? "border-teal/20 bg-white/[0.03] shadow-[0_0_40px_rgba(0,212,170,0.06)]"
                       : "border-transparent bg-transparent opacity-40"
                   }`}
                 >
                   <span
-                    className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-500 ${
+                    className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-700 ease-out ${
                       i === activeIndex ? "text-teal" : "text-neutral-dark/60"
                     }`}
                   >
                     {usp.overline}
                   </span>
                   <h2
-                    className={`mt-3 text-2xl font-extrabold leading-tight tracking-tight transition-colors duration-500 xl:text-3xl ${
+                    className={`mt-3 text-2xl font-extrabold leading-tight tracking-tight transition-colors duration-700 ease-out xl:text-3xl ${
                       i === activeIndex ? "text-white" : "text-white/50"
                     }`}
                   >
                     {usp.headline}
                   </h2>
                   <p
-                    className={`mt-4 text-base leading-relaxed transition-colors duration-500 ${
+                    className={`mt-4 text-base leading-relaxed transition-colors duration-700 ease-out ${
                       i === activeIndex ? "text-neutral-dark" : "text-neutral-dark/40"
                     }`}
                   >
@@ -313,7 +451,6 @@ export default function USPSections() {
               ))}
             </div>
 
-            {/* Bottom spacer so last card can scroll to center */}
             <div className="h-[20vh]" aria-hidden="true" />
           </div>
         </div>

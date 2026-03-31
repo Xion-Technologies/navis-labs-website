@@ -64,7 +64,7 @@ export default function Home() {
         <link rel="canonical" href="https://navislabs.com" />
         <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
       </Helmet>
-      <HeroSection />
+      <HeroSection animate={splashDone} />
       <USPSections />
       <Suspense fallback={null}>
         <HowItWorksPreview />

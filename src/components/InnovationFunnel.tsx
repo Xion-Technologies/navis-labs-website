@@ -146,13 +146,6 @@ export default function InnovationFunnel() {
     function draw() {
       ctx.clearRect(0, 0, W, H);
 
-      // --- Label: top ---
-      ctx.font = '600 10px "Inter", system-ui, sans-serif';
-      ctx.letterSpacing = "2px";
-      ctx.fillStyle = "rgba(148, 163, 184, 0.45)";
-      ctx.textAlign = "center";
-      ctx.fillText("AI & TECH BUZZWORDS", funnelCx, funnelTopY - 20);
-
       // --- Draw funnel shape ---
       ctx.beginPath();
       ctx.moveTo(funnelCx - funnelTopHalfW, funnelTopY);
