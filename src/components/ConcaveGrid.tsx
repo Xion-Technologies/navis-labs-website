@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useAnimationGate } from "@/hooks/useAnimationGate";
 
 /**
  * A convex perspective grid that bulges toward the viewer,
@@ -14,6 +15,10 @@ export default function ConcaveGrid() {
   const targetTilt = useRef({ x: 0, y: 0 });
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
   const scrollRef = useRef(0);
+  const containerRectRef = useRef<DOMRect | null>(null);
+  const scrollPendingRef = useRef(false);
+  const latestScrollYRef = useRef(0);
+  const { shouldAnimate } = useAnimationGate(containerRef, { rootMargin: "240px 0px" });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -22,12 +27,13 @@ export default function ConcaveGrid() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (prefersReduced) return;
+    if (!shouldAnimate) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const viewportW = window.innerWidth;
+    const dprCap = viewportW <= 768 ? 1.2 : viewportW <= 1024 ? 1.4 : 1.75;
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+    let previousTs = 0;
+    let segments = 48;
 
     function resize() {
       const rect = container!.getBoundingClientRect();
@@ -38,6 +44,7 @@ export default function ConcaveGrid() {
       canvas!.style.width = `${w}px`;
       canvas!.style.height = `${h}px`;
       sizeRef.current = { w, h };
+      containerRectRef.current = container!.getBoundingClientRect();
     }
 
     function project(
@@ -67,9 +74,15 @@ export default function ConcaveGrid() {
       return [cx + x1 * scale, cy + y1 * scale, depth];
     }
 
-    function draw() {
+    function draw(ts: number) {
       if (!ctx || !canvas) return;
       const { w, h } = sizeRef.current;
+      if (previousTs > 0) {
+        const frameDelta = ts - previousTs;
+        segments = frameDelta > 20 ? 30 : 48;
+      }
+      previousTs = ts;
+
       if (w === 0) {
         rafRef.current = requestAnimationFrame(draw);
         return;
@@ -126,8 +139,6 @@ export default function ConcaveGrid() {
       ctx.globalCompositeOperation = "source-over";
 
       const baseAlpha = 0.16;
-      const segments = 48;
-
       // Draw horizontal lines
       for (let i = -halfY; i <= halfY; i++) {
         const yOff = i * cellSize;
@@ -199,7 +210,7 @@ export default function ConcaveGrid() {
     }
 
     function onMouseMove(e: MouseEvent) {
-      const rect = container!.getBoundingClientRect();
+      const rect = containerRectRef.current ?? container!.getBoundingClientRect();
       mouseRef.current = {
         x: (e.clientX - rect.left) / rect.width,
         y: (e.clientY - rect.top) / rect.height,
@@ -211,7 +222,13 @@ export default function ConcaveGrid() {
     }
 
     function onScroll() {
-      scrollRef.current = window.scrollY;
+      latestScrollYRef.current = window.scrollY;
+      if (scrollPendingRef.current) return;
+      scrollPendingRef.current = true;
+      requestAnimationFrame(() => {
+        scrollRef.current = latestScrollYRef.current;
+        scrollPendingRef.current = false;
+      });
     }
 
     window.addEventListener("mousemove", onMouseMove, { passive: true });
@@ -229,7 +246,7 @@ export default function ConcaveGrid() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [shouldAnimate]);
 
   return (
     <div

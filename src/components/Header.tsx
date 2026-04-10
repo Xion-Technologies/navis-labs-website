@@ -27,12 +27,30 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const scrollRafRef = useRef(0);
+  const lastScrolledRef = useRef(false);
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      if (scrollRafRef.current) return;
+      scrollRafRef.current = requestAnimationFrame(() => {
+        const nextScrolled = window.scrollY > 20;
+        if (nextScrolled !== lastScrolledRef.current) {
+          lastScrolledRef.current = nextScrolled;
+          setScrolled(nextScrolled);
+        }
+        scrollRafRef.current = 0;
+      });
+    };
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollRafRef.current) {
+        cancelAnimationFrame(scrollRafRef.current);
+      }
+    };
   }, []);
 
   // Close mobile menu on route change

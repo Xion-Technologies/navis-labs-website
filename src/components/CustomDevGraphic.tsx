@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useAnimationGate } from "@/hooks/useAnimationGate";
 
 const codeLines = [
   "from flask import Flask, jsonify",
@@ -52,14 +53,17 @@ const codeLines = [
 export default function CustomDevGraphic() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const { shouldAnimate } = useAnimationGate(wrapperRef, { rootMargin: "160px 0px" });
 
   useEffect(() => {
+    if (!shouldAnimate) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 1024 ? 1.35 : 1.8);
     const W = 520;
     const H = 620;
     canvas.width = W * dpr;
@@ -118,7 +122,13 @@ export default function CustomDevGraphic() {
       });
     }
 
-    function draw() {
+    let previousTs = 0;
+    let lowQuality = false;
+    function draw(ts: number) {
+      if (previousTs > 0) {
+        lowQuality = ts - previousTs > 20;
+      }
+      previousTs = ts;
       ctx.clearRect(0, 0, W, H);
       frame++;
       typedChars += 1.6;
@@ -476,7 +486,7 @@ export default function CustomDevGraphic() {
       ctx.stroke();
 
       // Traveling dots (3 dots flowing downward)
-      for (let d = 0; d < 3; d++) {
+      for (let d = 0; d < (lowQuality ? 2 : 3); d++) {
         const dotSpeed = 0.012;
         const dotOffset = d / 3;
         const dotT = ((frame * dotSpeed + dotOffset) % 1);
@@ -510,10 +520,10 @@ export default function CustomDevGraphic() {
 
     animRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animRef.current);
-  }, []);
+  }, [shouldAnimate]);
 
   return (
-    <div className="flex items-center justify-center">
+    <div ref={wrapperRef} className="flex items-center justify-center">
       <canvas
         ref={canvasRef}
         className="max-w-full"

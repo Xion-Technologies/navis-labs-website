@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useAnimationGate } from "@/hooks/useAnimationGate";
 
 const techJargon = [
   // Consumer AI products
@@ -86,15 +87,18 @@ const businessOutputs = [
 export default function InnovationFunnel() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const { shouldAnimate } = useAnimationGate(wrapperRef, { rootMargin: "160px 0px" });
 
   useEffect(() => {
+    if (!shouldAnimate) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     if (!ctx) return;
 
     // Hi-DPI support
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 1024 ? 1.3 : 1.7);
     const W = 520;
     const H = 570;
     canvas.width = W * dpr;
@@ -143,7 +147,13 @@ export default function InnovationFunnel() {
     let outputY = spoutBottom + 45;
     let outputPhase: "enter" | "hold" | "exit" = "enter";
 
-    function draw() {
+    let previousTs = 0;
+    let lowQuality = false;
+    function draw(ts: number) {
+      if (previousTs > 0) {
+        lowQuality = ts - previousTs > 20;
+      }
+      previousTs = ts;
       ctx.clearRect(0, 0, W, H);
 
       // --- Draw funnel shape ---
@@ -176,18 +186,20 @@ export default function InnovationFunnel() {
       ctx.stroke();
 
       // Inner glow at convergence
-      const glowGrad = ctx.createRadialGradient(
-        funnelCx, funnelBottomY, 0,
-        funnelCx, funnelBottomY, 70
-      );
-      glowGrad.addColorStop(0, "rgba(0, 212, 170, 0.15)");
-      glowGrad.addColorStop(1, "rgba(0, 212, 170, 0)");
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(funnelCx - 70, funnelBottomY - 35, 140, 70);
+      if (!lowQuality) {
+        const glowGrad = ctx.createRadialGradient(
+          funnelCx, funnelBottomY, 0,
+          funnelCx, funnelBottomY, 70
+        );
+        glowGrad.addColorStop(0, "rgba(0, 212, 170, 0.15)");
+        glowGrad.addColorStop(1, "rgba(0, 212, 170, 0)");
+        ctx.fillStyle = glowGrad;
+        ctx.fillRect(funnelCx - 70, funnelBottomY - 35, 140, 70);
+      }
 
       // --- Spawn & update falling words ---
       spawnTimer++;
-      if (spawnTimer > 22) {
+      if (spawnTimer > (lowQuality ? 28 : 22)) {
         spawnWord();
         spawnTimer = 0;
       }
@@ -328,10 +340,10 @@ export default function InnovationFunnel() {
     animRef.current = requestAnimationFrame(draw);
 
     return () => cancelAnimationFrame(animRef.current);
-  }, []);
+  }, [shouldAnimate]);
 
   return (
-    <div className="flex items-center justify-center">
+    <div ref={wrapperRef} className="flex items-center justify-center">
       <canvas
         ref={canvasRef}
         className="max-w-full"

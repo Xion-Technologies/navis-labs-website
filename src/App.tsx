@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import Header from "@/components/Header";
@@ -6,15 +6,19 @@ import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 
 
-import Home from "@/pages/Home";
-import About from "@/pages/About";
-import Services from "@/pages/Services";
-import InnovationLab from "@/pages/InnovationLab";
-import CustomDevelopment from "@/pages/CustomDevelopment";
-import HowItWorks from "@/pages/HowItWorks";
-import Solutions from "@/pages/Solutions";
-import Projects from "@/pages/Projects";
-import Contact from "@/pages/Contact";
+const Home = lazy(() => import("@/pages/Home"));
+const About = lazy(() => import("@/pages/About"));
+const Services = lazy(() => import("@/pages/Services"));
+const InnovationLab = lazy(() => import("@/pages/InnovationLab"));
+const CustomDevelopment = lazy(() => import("@/pages/CustomDevelopment"));
+const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
+const Solutions = lazy(() => import("@/pages/Solutions"));
+const Projects = lazy(() => import("@/pages/Projects"));
+const Contact = lazy(() => import("@/pages/Contact"));
+const HospitalAiChatbot = lazy(() => import("@/pages/case-studies/HospitalAiChatbot"));
+const PgaInsuranceChatbot = lazy(() => import("@/pages/case-studies/PgaInsuranceChatbot"));
+const CipErpOverhaul = lazy(() => import("@/pages/case-studies/CipErpOverhaul"));
+const JanetLegalPlatform = lazy(() => import("@/pages/case-studies/JanetLegalPlatform"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -39,17 +43,23 @@ function Layout() {
       <main id="main-content">
         <ScrollToTop />
         <PageTransition>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/services/innovation-lab" element={<InnovationLab />} />
-            <Route path="/services/custom-development" element={<CustomDevelopment />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/solutions" element={<Solutions />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/contact" element={<Contact />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/services/innovation-lab" element={<InnovationLab />} />
+              <Route path="/services/custom-development" element={<CustomDevelopment />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/solutions" element={<Solutions />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/case-studies/hospital-ai-chatbot" element={<HospitalAiChatbot />} />
+              <Route path="/case-studies/pga-insurance-chatbot" element={<PgaInsuranceChatbot />} />
+              <Route path="/case-studies/cip-erp-overhaul" element={<CipErpOverhaul />} />
+              <Route path="/case-studies/janet-legal-platform" element={<JanetLegalPlatform />} />
+              <Route path="/contact" element={<Contact />} />
+            </Routes>
+          </Suspense>
         </PageTransition>
       </main>
       <Footer />

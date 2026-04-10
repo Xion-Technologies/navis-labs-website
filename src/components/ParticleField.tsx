@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useAnimationGate } from "@/hooks/useAnimationGate";
 
 const buzzwords = [
   "ChatGPT", "Claude", "Gemini", "Copilot", "Midjourney",
@@ -67,6 +68,8 @@ export default function ParticleField() {
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef<number>(0);
   const sizeRef = useRef({ w: 0, h: 0 });
+  const containerRectRef = useRef<DOMRect | null>(null);
+  const { shouldAnimate } = useAnimationGate(containerRef, { rootMargin: "200px 0px" });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -75,10 +78,14 @@ export default function ParticleField() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return;
+    if (!shouldAnimate) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const viewportW = window.innerWidth;
+    const dprCap = viewportW <= 768 ? 1.25 : viewportW <= 1024 ? 1.5 : 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+    let frameCount = 0;
+    let previousTs = 0;
+    let skipHeavyFrame = false;
 
     function resize() {
       const rect = container!.getBoundingClientRect();
@@ -89,6 +96,7 @@ export default function ParticleField() {
       canvas!.style.width = `${w}px`;
       canvas!.style.height = `${h}px`;
       sizeRef.current = { w, h };
+      containerRectRef.current = container!.getBoundingClientRect();
     }
 
     function initParticles() {
@@ -158,10 +166,19 @@ export default function ParticleField() {
       }
     }
 
-    function draw() {
+    function draw(ts: number) {
       if (!ctx || !canvas) return;
       const { w, h } = sizeRef.current;
-      if (w === 0) { rafRef.current = requestAnimationFrame(draw); return; }
+      if (w === 0) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
+      if (previousTs > 0) {
+        const frameDelta = ts - previousTs;
+        skipHeavyFrame = frameDelta > 19;
+      }
+      previousTs = ts;
+      frameCount++;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
@@ -170,7 +187,7 @@ export default function ParticleField() {
       const particles = particlesRef.current;
       const mouse = mouseRef.current;
 
-      const rect = container!.getBoundingClientRect();
+      const rect = containerRectRef.current ?? container!.getBoundingClientRect();
       const localMouseX = mouse.x - rect.left;
       const localMouseY = mouse.y - rect.top;
 
@@ -208,8 +225,10 @@ export default function ParticleField() {
           p.vy = (p.vy / speed) * MAX_VELOCITY;
         }
 
-        p.vx += (Math.random() - 0.5) * 0.000008;
-        p.vy += (Math.random() - 0.5) * 0.000008;
+        if (!skipHeavyFrame || frameCount % 2 === 0) {
+          p.vx += (Math.random() - 0.5) * 0.000008;
+          p.vy += (Math.random() - 0.5) * 0.000008;
+        }
 
         p.x += p.vx;
         p.y += p.vy;
@@ -218,7 +237,9 @@ export default function ParticleField() {
         p.y = Math.max(0.02, Math.min(0.98, p.y));
 
         // Update typing animation
-        updateTyping(p);
+        if (!skipHeavyFrame || frameCount % 2 === 0) {
+          updateTyping(p);
+        }
       }
 
       // Draw particles
@@ -230,14 +251,16 @@ export default function ParticleField() {
         const py = p.y * h;
 
         // Back-glow behind each dot
-        const glowGrad = ctx.createRadialGradient(px, py, 0, px, py, p.glowRadius);
-        glowGrad.addColorStop(0, `rgba(148, 163, 184, ${p.opacity * 0.7})`);
-        glowGrad.addColorStop(0.4, `rgba(148, 163, 184, ${p.opacity * 0.25})`);
-        glowGrad.addColorStop(1, "rgba(148, 163, 184, 0)");
-        ctx.fillStyle = glowGrad;
-        ctx.beginPath();
-        ctx.arc(px, py, p.glowRadius, 0, Math.PI * 2);
-        ctx.fill();
+        if (!skipHeavyFrame) {
+          const glowGrad = ctx.createRadialGradient(px, py, 0, px, py, p.glowRadius);
+          glowGrad.addColorStop(0, `rgba(148, 163, 184, ${p.opacity * 0.7})`);
+          glowGrad.addColorStop(0.4, `rgba(148, 163, 184, ${p.opacity * 0.25})`);
+          glowGrad.addColorStop(1, "rgba(148, 163, 184, 0)");
+          ctx.fillStyle = glowGrad;
+          ctx.beginPath();
+          ctx.arc(px, py, p.glowRadius, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         // Dot
         ctx.beginPath();
@@ -314,7 +337,7 @@ export default function ParticleField() {
       document.removeEventListener("mouseleave", onMouseLeave);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [shouldAnimate]);
 
   return (
     <div ref={containerRef} className="pointer-events-none absolute inset-0 z-0">

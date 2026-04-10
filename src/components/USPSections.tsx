@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useAnimationGate } from "@/hooks/useAnimationGate";
 
 const usps = [
   {
@@ -47,6 +48,8 @@ const sonarPoints = [
 function SonarVisual({ activeIndex }: { activeIndex: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const { shouldAnimate } = useAnimationGate(wrapperRef, { rootMargin: "160px 0px" });
 
   const state = useRef({
     sweepAngle: 0, // current radar sweep angle in radians
@@ -71,8 +74,7 @@ function SonarVisual({ activeIndex }: { activeIndex: number }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return;
+    if (!shouldAnimate) return;
 
     const size = 420;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -264,10 +266,10 @@ function SonarVisual({ activeIndex }: { activeIndex: number }) {
 
     rafRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafRef.current);
-  }, []);
+  }, [shouldAnimate]);
 
   return (
-    <div className="relative flex items-center justify-center">
+    <div ref={wrapperRef} className="relative flex items-center justify-center">
       {/* Glow behind glass container */}
       <div className="absolute h-96 w-96 rounded-full bg-teal/[0.05] blur-[120px]" />
 
@@ -340,6 +342,8 @@ export default function USPSections() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef(0);
+  const { inViewport } = useAnimationGate(sectionRef, { rootMargin: "240px 0px" });
 
   const handleScroll = useCallback(() => {
     const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
@@ -368,13 +372,23 @@ export default function USPSections() {
   }, []);
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const onScroll = () => {
+      if (!inViewport || scrollRafRef.current) return;
+      scrollRafRef.current = requestAnimationFrame(() => {
+        scrollRafRef.current = 0;
+        handleScroll();
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     const t = setTimeout(handleScroll, 100);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", onScroll);
+      if (scrollRafRef.current) {
+        cancelAnimationFrame(scrollRafRef.current);
+      }
       clearTimeout(t);
     };
-  }, [handleScroll]);
+  }, [handleScroll, inViewport]);
 
   return (
     <section ref={sectionRef} className="relative py-20 sm:py-32">

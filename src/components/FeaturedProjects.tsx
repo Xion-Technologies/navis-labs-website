@@ -1,34 +1,19 @@
 import { Link } from "react-router-dom";
 import FadeIn from "@/components/FadeIn";
+import { caseStudies } from "@/data/caseStudies";
 
-const projects = [
-  {
-    title: "ERP System",
-    desc: "End-to-end enterprise resource planning for operational efficiency and real-time intelligence.",
-    href: "/projects#erp-system",
-    color: "teal" as const,
-  },
-  {
-    title: "JKQ AICB",
-    desc: "AI-powered platform leveraging intelligent automation for streamlined business processes.",
-    href: "/projects#jkq-aicb",
-    color: "indigo" as const,
-  },
-  {
-    title: "Laundromat Service",
-    desc: "Digital platform modernizing operations with automated scheduling and customer management.",
-    href: "/projects#laundromat-service",
-    color: "teal" as const,
-  },
-  {
-    title: "Booking System",
-    desc: "Scalable reservation engine built for high availability and seamless experience.",
-    href: "/projects#booking-system",
-    color: "indigo" as const,
-  },
-];
+function splitCardCopy(title: string, fallback: string) {
+  const separatorIndex = title.indexOf(":");
+  if (separatorIndex === -1) {
+    return { heading: title, body: fallback };
+  }
 
-function PlaceholderImage({ title, color }: { title: string; color: "teal" | "indigo" }) {
+  const heading = title.slice(0, separatorIndex + 1).trim();
+  const body = title.slice(separatorIndex + 1).trim();
+  return { heading, body: body || fallback };
+}
+
+function PlaceholderImage({ color }: { color: "teal" | "indigo" }) {
   const isTeal = color === "teal";
   return (
     <div
@@ -92,17 +77,19 @@ export default function FeaturedProjects() {
 
         {/* Project cards grid */}
         <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {projects.map((project, i) => (
-            <FadeIn key={project.title} delay={i * 100}>
-              <Link
-                to={project.href}
-                aria-label={`View project: ${project.title}`}
-                className="group block overflow-hidden rounded-2xl border border-white/[0.05] bg-white/[0.02] transition-all duration-300 hover:border-teal/25 hover:shadow-xl hover:shadow-teal/[0.06]"
-              >
+          {caseStudies.map((project, i) => {
+            const { heading, body } = splitCardCopy(project.title, project.cardDescription);
+            return (
+              <FadeIn key={project.slug} delay={i * 100}>
+                <Link
+                  to={`/case-studies/${project.slug}`}
+                  aria-label={`View project: ${project.title}`}
+                  className="group block overflow-hidden rounded-2xl border border-white/[0.05] bg-white/[0.02] transition-all duration-300 hover:border-teal/25 hover:shadow-xl hover:shadow-teal/[0.06]"
+                >
                 {/* Image area */}
                 <div className="relative aspect-[16/9] overflow-hidden">
                   <div className="h-full w-full transition-transform duration-500 group-hover:scale-105">
-                    <PlaceholderImage title={project.title} color={project.color} />
+                    <PlaceholderImage color={project.accent} />
                   </div>
 
                   {/* Hover overlay */}
@@ -124,17 +111,18 @@ export default function FeaturedProjects() {
                 </div>
 
                 {/* Text content */}
-                <div className="p-6">
-                  <h3 className="text-lg font-bold text-white transition-colors duration-300 group-hover:text-teal">
-                    {project.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-dark">
-                    {project.desc}
-                  </p>
-                </div>
-              </Link>
-            </FadeIn>
-          ))}
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-white transition-colors duration-300 group-hover:text-teal">
+                      {heading}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-neutral-dark">
+                      {body}
+                    </p>
+                  </div>
+                </Link>
+              </FadeIn>
+            );
+          })}
         </div>
 
         {/* CTA */}

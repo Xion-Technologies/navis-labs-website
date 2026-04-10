@@ -27,15 +27,15 @@ body {
 /* Glassmorphism utility */
 .glass {
   background: rgba(30, 58, 95, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-light {
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -142,6 +142,13 @@ body {
 
 .logo-carousel {
   animation: logo-scroll 45s linear infinite;
+  will-change: transform;
+}
+
+@media (max-width: 1024px) {
+  .logo-carousel {
+    animation-duration: 60s;
+  }
 }
 
 /* Use case progress bar animation */

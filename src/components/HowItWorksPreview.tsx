@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useAnimationGate } from "@/hooks/useAnimationGate";
 
 /* ── Node data (world coordinates) ── */
 const nodes = [
@@ -124,6 +125,9 @@ export default function HowItWorksPreview() {
   const ctaRef = useRef<HTMLDivElement>(null);
   const [currentNode, setCurrentNode] = useState(0);
   const [entered, setEntered] = useState(false);
+  const nodeIndexRef = useRef(0);
+  const scrollRafRef = useRef(0);
+  const { shouldAnimate } = useAnimationGate(sectionRef, { rootMargin: "300px 0px" });
 
   // Mutable state for the animation loop (avoids re-renders)
   const stateRef = useRef({
@@ -168,7 +172,10 @@ export default function HowItWorksPreview() {
     }
 
     const ci = getCurrentNodeIndex(cameraProgress);
-    setCurrentNode(ci);
+    if (ci !== nodeIndexRef.current) {
+      nodeIndexRef.current = ci;
+      setCurrentNode(ci);
+    }
   }, []);
 
   // Intersection observer for section entry
@@ -187,12 +194,23 @@ export default function HowItWorksPreview() {
     observer.observe(section);
 
     // Attach to the main page scroll
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const onScroll = () => {
+      if (scrollRafRef.current) return;
+      scrollRafRef.current = requestAnimationFrame(() => {
+        scrollRafRef.current = 0;
+        handleScroll();
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
     handleScroll();
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", onScroll);
+      if (scrollRafRef.current) {
+        cancelAnimationFrame(scrollRafRef.current);
+      }
     };
   }, [handleScroll]);
 
@@ -200,13 +218,13 @@ export default function HowItWorksPreview() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!shouldAnimate) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const s = stateRef.current;
-    s.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    s.dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 1024 ? 1.3 : 1.6);
     s.bgStars = generateBgStars();
     s.scatterStars = generateScatterStars();
 
@@ -618,14 +636,23 @@ export default function HowItWorksPreview() {
     /* ── Main loop ── */
     resize();
 
-    function loop() {
+    let previousTs = 0;
+    let lowQuality = false;
+
+    function loop(ts: number) {
+      if (previousTs > 0) {
+        lowQuality = ts - previousTs > 20;
+      }
+      previousTs = ts;
       s.t += 0.016;
       const target = getNodeTarget(s.scrollT);
       s.camX += (target.x - s.camX) * 0.07;
       s.camY += (target.y - s.camY) * 0.07;
 
       drawBackground();
-      drawNebula(s.t);
+      if (!lowQuality) {
+        drawNebula(s.t);
+      }
       drawBgStars(s.t);
       drawScatterStars(s.t);
       drawBeams();
@@ -640,7 +667,7 @@ export default function HowItWorksPreview() {
       cancelAnimationFrame(s.raf);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [shouldAnimate]);
 
   const counterText =
     String("0" + (currentNode + 1)).slice(-2) + " / 0" + nodes.length;
