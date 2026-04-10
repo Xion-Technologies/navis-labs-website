@@ -6,6 +6,7 @@ export interface CaseStudy {
   industry: string;
   summary: string;
   cardDescription: string;
+  image?: string;
   tags: string[];
   accent: CaseStudyAccent;
   clientOverview: Record<string, string>;
@@ -33,6 +34,7 @@ export const caseStudies: CaseStudy[] = [
       "A municipal hospital serving a rural population used an AI assistant to improve patient access, reduce frontline bottlenecks, and increase confidence in local care.",
     cardDescription:
       "An AI patient assistant helped a rural municipal hospital reduce inquiry overload and improve local patient retention.",
+    image: "/case-studies/hospital-ai-chatbot.png",
     tags: ["Healthcare", "Conversational AI", "Patient Experience"],
     accent: "teal",
     clientOverview: {
@@ -98,6 +100,7 @@ export const caseStudies: CaseStudy[] = [
       "A top-tier insurer modernized customer education and lead handling with an always-on AI assistant, while laying the groundwork for broader digital transformation.",
     cardDescription:
       "A client-facing insurance chatbot reduced hotline load and improved plan discovery for a legacy national insurer.",
+    image: "/case-studies/pga-insurance-chatbot.png",
     tags: ["Insurance", "Conversational AI", "Digital Transformation"],
     accent: "indigo",
     clientOverview: {
@@ -165,6 +168,7 @@ export const caseStudies: CaseStudy[] = [
       "A nationwide hospitality distributor replaced a fragile legacy FoxPro stack with a modern custom ERP, improving speed, governance, and scalability.",
     cardDescription:
       "A full ERP rebuild modernized operations, access control, and accountability for a nationwide hospitality distributor.",
+    image: "/case-studies/cip-erp-overhaul.png",
     tags: ["ERP", "Legacy Modernization", "Operations"],
     accent: "teal",
     clientOverview: {
@@ -234,6 +238,7 @@ export const caseStudies: CaseStudy[] = [
       "A boutique legal practice transformed scattered archives into an intelligent, client-centered knowledge platform with OCR and AI-assisted drafting.",
     cardDescription:
       "A custom legal platform centralized matter history, enabled intelligent retrieval, and accelerated contract drafting.",
+    image: "/case-studies/janet-legal-platform.png",
     tags: ["Legal Tech", "Knowledge Management", "AI Drafting"],
     accent: "indigo",
     clientOverview: {

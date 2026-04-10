@@ -13,52 +13,24 @@ function splitCardCopy(title: string, fallback: string) {
   return { heading, body: body || fallback };
 }
 
-function PlaceholderImage({ color }: { color: "teal" | "indigo" }) {
+function CardImage({ src, alt, color }: { src?: string; alt: string; color: "teal" | "indigo" }) {
   const isTeal = color === "teal";
-  return (
-    <div
-      className={`flex h-full w-full items-center justify-center ${
-        isTeal ? "bg-gradient-to-br from-navy-mid to-teal/10" : "bg-gradient-to-br from-navy-mid to-indigo/10"
-      }`}
-    >
-      {/* Abstract geometric pattern */}
-      <svg viewBox="0 0 200 120" fill="none" className="h-full w-full opacity-40" aria-hidden="true">
-        {/* Grid dots */}
-        {Array.from({ length: 5 }).map((_, row) =>
-          Array.from({ length: 8 }).map((_, col) => (
-            <circle
-              key={`${row}-${col}`}
-              cx={15 + col * 24}
-              cy={15 + row * 24}
-              r="1.5"
-              fill="currentColor"
-              className={isTeal ? "text-teal/60" : "text-indigo/60"}
-            />
-          ))
-        )}
-        {/* Accent shape */}
-        <rect
-          x="60"
-          y="30"
-          width="80"
-          height="60"
-          rx="8"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className={isTeal ? "text-teal/40" : "text-indigo/40"}
+  const bg = isTeal
+    ? "bg-gradient-to-br from-navy-mid to-teal/10"
+    : "bg-gradient-to-br from-navy-mid to-indigo/10";
+  if (src) {
+    return (
+      <div className={`flex h-full w-full items-center justify-center ${bg}`}>
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-contain"
+          loading="lazy"
         />
-        <rect
-          x="75"
-          y="45"
-          width="50"
-          height="30"
-          rx="4"
-          fill="currentColor"
-          className={isTeal ? "text-teal/15" : "text-indigo/15"}
-        />
-      </svg>
-    </div>
-  );
+      </div>
+    );
+  }
+  return <div className={`h-full w-full ${bg}`} />;
 }
 
 export default function FeaturedProjects() {
@@ -80,16 +52,16 @@ export default function FeaturedProjects() {
           {caseStudies.map((project, i) => {
             const { heading, body } = splitCardCopy(project.title, project.cardDescription);
             return (
-              <FadeIn key={project.slug} delay={i * 100}>
+              <FadeIn key={project.slug} delay={i * 100} className="h-full">
                 <Link
                   to={`/case-studies/${project.slug}`}
                   aria-label={`View project: ${project.title}`}
-                  className="group block overflow-hidden rounded-2xl border border-white/[0.05] bg-white/[0.02] transition-all duration-300 hover:border-teal/25 hover:shadow-xl hover:shadow-teal/[0.06]"
+                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.05] bg-white/[0.02] transition-all duration-300 hover:border-teal/25 hover:shadow-xl hover:shadow-teal/[0.06]"
                 >
                 {/* Image area */}
                 <div className="relative aspect-[16/9] overflow-hidden">
                   <div className="h-full w-full transition-transform duration-500 group-hover:scale-105">
-                    <PlaceholderImage color={project.accent} />
+                    <CardImage src={project.image} alt={project.title} color={project.accent} />
                   </div>
 
                   {/* Hover overlay */}
@@ -111,7 +83,7 @@ export default function FeaturedProjects() {
                 </div>
 
                 {/* Text content */}
-                  <div className="p-6">
+                  <div className="flex flex-1 flex-col p-6">
                     <h3 className="text-lg font-bold text-white transition-colors duration-300 group-hover:text-teal">
                       {heading}
                     </h3>

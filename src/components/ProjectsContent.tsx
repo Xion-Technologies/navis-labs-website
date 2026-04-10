@@ -87,20 +87,29 @@ export default function ProjectsContent() {
               const isTeal = project.accent === "teal";
               const { heading, body } = splitCardCopy(project.title, project.cardDescription);
               return (
-                <FadeIn key={project.slug} delay={i * 120}>
+                <FadeIn key={project.slug} delay={i * 120} className="h-full">
                   <Link
                     to={`/case-studies/${project.slug}`}
-                    className="group relative block overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] transition-all duration-300 hover:border-teal/20 hover:shadow-[0_0_40px_rgba(0,212,170,0.06)]"
+                    className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] transition-all duration-300 hover:border-teal/20 hover:shadow-[0_0_40px_rgba(0,212,170,0.06)]"
                     aria-label={`Read case study: ${project.title}`}
                   >
                     <div className="relative h-52 overflow-hidden sm:h-60">
                       <div
-                        className={`h-full w-full bg-gradient-to-br transition-transform duration-500 group-hover:scale-105 ${
+                        className={`flex h-full w-full items-center justify-center bg-gradient-to-br transition-transform duration-500 group-hover:scale-105 ${
                           isTeal
                             ? "from-navy-mid via-teal/10 to-indigo/10"
                             : "from-navy-mid via-indigo/10 to-teal/10"
                         }`}
-                      />
+                      >
+                        {project.image && (
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="h-full w-full object-contain"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
                       <div className="absolute inset-0 flex items-center justify-center bg-navy/70 opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100">
                         <span className="flex items-center gap-2 rounded-full border border-teal/30 bg-teal/10 px-6 py-2.5 text-sm font-semibold text-teal">
                           Read Case Study
@@ -111,7 +120,7 @@ export default function ProjectsContent() {
                       </div>
                     </div>
 
-                    <div className="p-6 sm:p-8">
+                    <div className="flex flex-1 flex-col p-6 sm:p-8">
                       <h2 className="text-xl font-bold text-white sm:text-2xl">
                         {heading}
                       </h2>
@@ -119,7 +128,7 @@ export default function ProjectsContent() {
                         {body}
                       </p>
 
-                      <div className="mt-5 flex flex-wrap gap-2">
+                      <div className="mt-auto flex flex-wrap gap-2 pt-5">
                         {project.tags.map((tag) => (
                           <span
                             key={tag}
