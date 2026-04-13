@@ -209,7 +209,7 @@ export default function AboutContent() {
             <div className="mt-12 grid grid-cols-2 gap-x-10 px-[calc(100%/6)]">
               {[
                 { initials: "LA", name: "Luke", title: "Lead UI Designer" },
-                { initials: "NV", name: "Nicolo", title: "Business Development Manager" },
+                { initials: "JV", name: "Joseph", title: "Business Development Manager" },
               ].map((member, i) => (
                 <FadeIn key={member.name} delay={300 + i * 80}>
                   <div className="group flex flex-col items-center text-center">
