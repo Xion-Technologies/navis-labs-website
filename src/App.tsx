@@ -16,9 +16,9 @@ const Solutions = lazy(() => import("@/pages/Solutions"));
 const Projects = lazy(() => import("@/pages/Projects"));
 const Contact = lazy(() => import("@/pages/Contact"));
 const HospitalAiChatbot = lazy(() => import("@/pages/case-studies/HospitalAiChatbot"));
-const PgaInsuranceChatbot = lazy(() => import("@/pages/case-studies/PgaInsuranceChatbot"));
-const CipErpOverhaul = lazy(() => import("@/pages/case-studies/CipErpOverhaul"));
-const JanetLegalPlatform = lazy(() => import("@/pages/case-studies/JanetLegalPlatform"));
+const InsuranceAiChatbot = lazy(() => import("@/pages/case-studies/InsuranceAiChatbot"));
+const EnterpriseErpOverhaul = lazy(() => import("@/pages/case-studies/EnterpriseErpOverhaul"));
+const LegalKnowledgePlatform = lazy(() => import("@/pages/case-studies/LegalKnowledgePlatform"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -54,9 +54,9 @@ function Layout() {
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/case-studies/hospital-ai-chatbot" element={<HospitalAiChatbot />} />
-              <Route path="/case-studies/pga-insurance-chatbot" element={<PgaInsuranceChatbot />} />
-              <Route path="/case-studies/cip-erp-overhaul" element={<CipErpOverhaul />} />
-              <Route path="/case-studies/janet-legal-platform" element={<JanetLegalPlatform />} />
+              <Route path="/case-studies/insurance-ai-chatbot" element={<InsuranceAiChatbot />} />
+              <Route path="/case-studies/enterprise-erp-overhaul" element={<EnterpriseErpOverhaul />} />
+              <Route path="/case-studies/legal-knowledge-platform" element={<LegalKnowledgePlatform />} />
               <Route path="/contact" element={<Contact />} />
             </Routes>
           </Suspense>

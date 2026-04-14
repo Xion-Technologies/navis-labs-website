@@ -1,9 +1,9 @@
 import CaseStudyTemplate from "@/components/CaseStudyTemplate";
 import { getCaseStudyBySlug } from "@/data/caseStudies";
 
-const caseStudy = getCaseStudyBySlug("janet-legal-platform");
+const caseStudy = getCaseStudyBySlug("legal-knowledge-platform");
 
-export default function JanetLegalPlatformPage() {
+export default function LegalKnowledgePlatformPage() {
   if (!caseStudy) {
     return null;
   }

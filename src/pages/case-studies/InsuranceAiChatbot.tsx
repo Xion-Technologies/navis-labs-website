@@ -1,9 +1,9 @@
 import CaseStudyTemplate from "@/components/CaseStudyTemplate";
 import { getCaseStudyBySlug } from "@/data/caseStudies";
 
-const caseStudy = getCaseStudyBySlug("cip-erp-overhaul");
+const caseStudy = getCaseStudyBySlug("insurance-ai-chatbot");
 
-export default function CipErpOverhaulPage() {
+export default function InsuranceAiChatbotPage() {
   if (!caseStudy) {
     return null;
   }

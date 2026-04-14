@@ -1,9 +1,9 @@
 import CaseStudyTemplate from "@/components/CaseStudyTemplate";
 import { getCaseStudyBySlug } from "@/data/caseStudies";
 
-const caseStudy = getCaseStudyBySlug("pga-insurance-chatbot");
+const caseStudy = getCaseStudyBySlug("enterprise-erp-overhaul");
 
-export default function PgaInsuranceChatbotPage() {
+export default function EnterpriseErpOverhaulPage() {
   if (!caseStudy) {
     return null;
   }

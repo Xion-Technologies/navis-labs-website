@@ -92,7 +92,7 @@ export const caseStudies: CaseStudy[] = [
       "This case study has been anonymized to protect client confidentiality.",
   },
   {
-    slug: "pga-insurance-chatbot",
+    slug: "insurance-ai-chatbot",
     title:
       "Modernizing a Legacy Insurance Leader: Reintroducing a Multi-Hundred-Million-Dollar Non-Life Insurer to the Digital Age with AI",
     industry: "Non-Life Insurance",
@@ -100,7 +100,7 @@ export const caseStudies: CaseStudy[] = [
       "A top-tier insurer modernized customer education and lead handling with an always-on AI assistant, while laying the groundwork for broader digital transformation.",
     cardDescription:
       "A client-facing insurance chatbot reduced hotline load and improved plan discovery for a legacy national insurer.",
-    image: "/case-studies/pga-insurance-chatbot.png",
+    image: "/case-studies/insurance-ai-chatbot.png",
     tags: ["Insurance", "Conversational AI", "Digital Transformation"],
     accent: "indigo",
     clientOverview: {
@@ -160,7 +160,7 @@ export const caseStudies: CaseStudy[] = [
       "This case study has been anonymized to protect client confidentiality.",
   },
   {
-    slug: "cip-erp-overhaul",
+    slug: "enterprise-erp-overhaul",
     title:
       "From Legacy to Leading: A Full ERP Overhaul That Brought a 50-Year-Old Hospitality Distributor Into the Modern Era",
     industry: "Retail & Distribution",
@@ -168,7 +168,7 @@ export const caseStudies: CaseStudy[] = [
       "A nationwide hospitality distributor replaced a fragile legacy FoxPro stack with a modern custom ERP, improving speed, governance, and scalability.",
     cardDescription:
       "A full ERP rebuild modernized operations, access control, and accountability for a nationwide hospitality distributor.",
-    image: "/case-studies/cip-erp-overhaul.png",
+    image: "/case-studies/enterprise-erp-overhaul.png",
     tags: ["ERP", "Legacy Modernization", "Operations"],
     accent: "teal",
     clientOverview: {
@@ -230,7 +230,7 @@ export const caseStudies: CaseStudy[] = [
       "This case study has been anonymized to protect client confidentiality.",
   },
   {
-    slug: "janet-legal-platform",
+    slug: "legal-knowledge-platform",
     title:
       "Building a Legal Knowledge Engine: The Custom Document Platform Behind a Tenured Legal Practice's Digital Transformation",
     industry: "Legal Services",
@@ -238,7 +238,7 @@ export const caseStudies: CaseStudy[] = [
       "A boutique legal practice transformed scattered archives into an intelligent, client-centered knowledge platform with OCR and AI-assisted drafting.",
     cardDescription:
       "A custom legal platform centralized matter history, enabled intelligent retrieval, and accelerated contract drafting.",
-    image: "/case-studies/janet-legal-platform.png",
+    image: "/case-studies/legal-knowledge-platform.png",
     tags: ["Legal Tech", "Knowledge Management", "AI Drafting"],
     accent: "indigo",
     clientOverview: {
