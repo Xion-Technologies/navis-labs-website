@@ -1,0 +1,35 @@
+# Navis Labs
+
+> Navis Labs is a development team obsessed with tech. We turn ideas into working prototypes in 3 days using the latest AI - custom-built for your business.
+
+## Main Pages
+
+- [Navis Labs | We Navigate the Tech. You Navigate the Business.](https://navislabs.com/): Navis Labs is a development team obsessed with tech. We turn ideas into working prototypes in 3 days using the latest AI — custom-built for your business.
+- [Navis Labs | We Navigate the Tech. You Navigate the Business. (Markdown)](https://navislabs.com/llms-pages/index.md): Static markdown version.
+- [About | Navis Labs](https://navislabs.com/about): We live at the edge of emerging technology so you don't have to. Navis Labs navigates businesses to the best-fit AI solutions — fast, custom, and risk-free.
+- [About | Navis Labs (Markdown)](https://navislabs.com/llms-pages/about.md): Static markdown version.
+- [Services | Navis Labs](https://navislabs.com/services): Full-stack development, AI integration, product design, system integration, and cloud architecture — engineered around your business.
+- [Services | Navis Labs (Markdown)](https://navislabs.com/llms-pages/services.md): Static markdown version.
+- [How We Work | Navis Labs](https://navislabs.com/how-it-works): Our proven methodology transforms your vision into a working solution within days. From discovery meeting to ongoing support.
+- [How We Work | Navis Labs (Markdown)](https://navislabs.com/llms-pages/how-it-works.md): Static markdown version.
+- [Solutions | Navis Labs](https://navislabs.com/solutions): From enterprise resource planning to AI-powered chatbots, we build custom solutions that address your specific challenges with precision and scale.
+- [Solutions | Navis Labs (Markdown)](https://navislabs.com/llms-pages/solutions.md): Static markdown version.
+- [Projects | Navis Labs](https://navislabs.com/projects): Real systems. Real impact. See what Navis Labs has built for businesses across industries.
+- [Projects | Navis Labs (Markdown)](https://navislabs.com/llms-pages/projects.md): Static markdown version.
+- [Contact | Navis Labs](https://navislabs.com/contact): Ready to see your idea come to life? Book a discovery meeting with Navis Labs. Your prototype is 3 days away.
+- [Contact | Navis Labs (Markdown)](https://navislabs.com/llms-pages/contact.md): Static markdown version.
+
+## Documentation
+
+- [TODO](https://navislabs.com/): TODO: No dedicated docs routes found in source routes.
+
+## Resources
+
+- [Innovation Lab | Navis Labs](https://navislabs.com/services/innovation-lab): Experimental projects pushing the boundaries of what's possible. Experience AI tools you can actually use in your business.
+- [Custom Development | Navis Labs](https://navislabs.com/services/custom-development): Bespoke software solutions engineered with precision, scalability, and performance — with you in mind every step of the way.
+- [Bridging the Healthcare Gap: An AI-Powered Patient Assistant That Transformed Access for a Rural Municipality | Navis Labs](https://navislabs.com/case-studies/hospital-ai-chatbot): A municipal hospital serving a rural population used an AI assistant to improve patient access, reduce frontline bottlenecks, and increase confidence in local care.
+- [Modernizing a Legacy Insurance Leader: Reintroducing a Multi-Hundred-Million-Dollar Non-Life Insurer to the Digital Age with AI | Navis Labs](https://navislabs.com/case-studies/insurance-ai-chatbot): A top-tier insurer modernized customer education and lead handling with an always-on AI assistant, while laying the groundwork for broader digital transformation.
+- [From Legacy to Leading: A Full ERP Overhaul That Brought a 50-Year-Old Hospitality Distributor Into the Modern Era | Navis Labs](https://navislabs.com/case-studies/enterprise-erp-overhaul): A nationwide hospitality distributor replaced a fragile legacy FoxPro stack with a modern custom ERP, improving speed, governance, and scalability.
+- [Building a Legal Knowledge Engine: The Custom Document Platform Behind a Tenured Legal Practice's Digital Transformation | Navis Labs](https://navislabs.com/case-studies/legal-knowledge-platform): A boutique legal practice transformed scattered archives into an intelligent, client-centered knowledge platform with OCR and AI-assisted drafting.
+- [Sitemap](https://navislabs.com/sitemap.xml): XML index of public routes.
+- [Robots](https://navislabs.com/robots.txt): Crawler directives for public content.

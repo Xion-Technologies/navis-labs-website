@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "generate:llms": "tsx scripts/generate-llms-txt.ts",
     "generate:sitemap": "tsx scripts/generate-sitemap.ts",
     "verify:robots": "tsx scripts/verify-robots.ts"
   },
