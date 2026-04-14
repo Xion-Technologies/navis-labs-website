@@ -1,0 +1,90 @@
+# robots.txt — navislabs.com
+# Last updated: 2026-04-15
+#
+# This site is a React SPA served via Cloudflare. Prerendered HTML is
+# delivered to bot user-agents by Cloudflare Workers so that crawlers
+# receive fully rendered content.
+#
+# IMPORTANT: Cloudflare's "AI Scrapers and Crawlers" blocking must be
+# DISABLED in the dashboard for these rules to take effect. See
+# docs/cloudflare-ai-crawlers.md for details.
+
+# =========================================================================
+# AI Crawlers — explicitly allowed with no restrictions on public content
+# =========================================================================
+
+# OpenAI
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Google AI / Gemini
+User-agent: Google-Extended
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+
+# ByteDance / TikTok AI
+User-agent: Bytespider
+Allow: /
+
+# Common Crawl (used by many AI training datasets)
+User-agent: CCBot
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# =========================================================================
+# Default rules for all other bots
+# =========================================================================
+
+User-agent: *
+Allow: /
+
+# Defensive disallows — these paths don't exist in the current SPA but
+# prevent accidental indexing if they're ever added behind a reverse proxy.
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /api
+Disallow: /api/
+Disallow: /login
+Disallow: /login/
+Disallow: /signup
+Disallow: /signup/
+Disallow: /settings
+Disallow: /settings/
+
+# Vite-generated asset bundles — not useful for indexing
+Disallow: /assets/
+
+Crawl-delay: 1
+
+# =========================================================================
+# Sitemap
+# =========================================================================
+
+Sitemap: https://navislabs.com/sitemap.xml
