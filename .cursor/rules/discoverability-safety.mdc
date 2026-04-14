@@ -1,0 +1,13 @@
+---
+description: Prevents accidental modification of hosting, build, or infrastructure config
+alwaysApply: true
+---
+
+# Discoverability Safety Guard
+
+- NEVER modify `vite.config.ts`, `index.html`, `tsconfig.json`, `.env`, `wrangler.toml`, `_worker.js`, `_headers`, `_redirects`, or anything in `functions/`.
+- NEVER install prerendering, SSR, or SSG packages.
+- NEVER modify existing npm scripts in `package.json`.
+- Cloudflare Workers are managed separately; never touch or reference their config.
+- ONLY write to: `public/`, `scripts/`, `docs/`, and new npm scripts in `package.json`.
+- ONLY read from `src/`; never write to it.

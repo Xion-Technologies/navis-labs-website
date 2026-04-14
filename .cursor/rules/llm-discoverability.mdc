@@ -1,0 +1,83 @@
+---
+description: Maintains LLM/SEO discoverability files (sitemap.xml, llms.txt, robots.txt) in sync with routes
+globs:
+  - src/**/routes/**
+  - src/**/router/**
+  - src/App.tsx
+  - src/**/pages/**
+  - src/**/views/**
+  - public/sitemap.xml
+  - public/llms.txt
+  - public/llms-full.txt
+  - public/robots.txt
+alwaysApply: false
+---
+
+# LLM Discoverability Maintenance
+
+Use this rule when route structure or page content changes may affect crawler and LLM discoverability.
+
+## Trigger Conditions
+
+Activate when any of these are true:
+
+- A route is added, removed, renamed, or restructured in router config.
+- A page component's content, title, or meta description changes significantly.
+- A new page component file is created.
+- A page component file is deleted or moved.
+- The user explicitly asks about SEO, LLM visibility, sitemaps, or discoverability.
+
+## Required Workflow
+
+1. Detect what changed:
+   - Identify affected routes/pages.
+   - Classify the change as addition, removal, rename, or content update.
+2. Update discoverability outputs:
+   - New routes: ensure entries exist in `public/sitemap.xml`, `public/llms.txt`, and corresponding markdown under `public/llms-pages/`.
+   - Removed routes: remove stale entries from `public/sitemap.xml` and `public/llms.txt`; remove orphan markdown page files.
+   - Renamed routes: update route URLs consistently in sitemap, llms files, and markdown output paths.
+   - Content changes: refresh `public/llms.txt`, `public/llms-full.txt`, and affected markdown pages.
+3. Use existing generator and audit scripts (do not reimplement logic):
+   - `npm run generate:sitemap`
+   - `npm run generate:llms`
+   - `npm run audit:seo`
+4. If a route appears protected/non-public and visibility is unclear, ask the user before updating discoverability entries.
+
+## Content Rules
+
+- Only use text that exists in source components/data when generating descriptions.
+- If no trustworthy description exists in source content, use a clear TODO placeholder rather than invented copy.
+- Keep formatting/style consistent with existing files.
+
+## robots.txt Handling
+
+- Never auto-modify `public/robots.txt`.
+- If a route change might require crawler policy changes, notify the user with a reminder.
+- Suggest `npm run verify:robots` when robots changes are relevant.
+
+## Cloudflare Worker Coordination
+
+When new routes are added:
+
+- Notify the user: `New route [/path] added. Remember to coordinate with your engineer to include this in the Cloudflare Worker prerender config.`
+- Update `docs/new-routes-for-workers.md` with the new routes (or run the existing audit flow that writes it).
+
+Do not edit Cloudflare Worker configuration files or deployment settings in this repository.
+
+## Validation Checklist
+
+After updates:
+
+- Confirm `public/sitemap.xml` is valid XML structure.
+- Confirm `public/llms.txt` and `public/llms-full.txt` are internally consistent with current routes.
+- Confirm markdown page files align with current route set.
+- Recommend running `npm run audit:seo` as the final verification.
+
+## Safety Constraints
+
+- NEVER modify `vite.config.ts`, `index.html`, `tsconfig.json`, `.env`, `wrangler.toml`, `_worker.js`, `_headers`, `_redirects`, or anything in `functions/`.
+- NEVER install prerendering, SSR, or SSG packages.
+- NEVER modify existing npm scripts in `package.json`.
+- Cloudflare Workers are managed separately; never edit or depend on their config here.
+- ONLY write to `public/`, `scripts/`, `docs/`, and new npm scripts in `package.json`.
+- ONLY read from `src/`; never write to it.
